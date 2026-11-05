@@ -1,0 +1,290 @@
+{
+  "meta": {
+    "devices": [
+      "VMC850",
+      "VMC650"
+    ],
+    "version": "1.2",
+    "note": "故障树数据基于公开报警手册与通用维修经验整理，配件型号为示例，以实物铭牌为准"
+  },
+  "faults": {
+    "F_SERVO_OVERLOAD": {
+      "name": "伺服电机过载",
+      "device": "VMC850",
+      "alarm_codes": [
+        "431",
+        "432",
+        "X03"
+      ],
+      "phenomenon": "开机报伺服过载报警，对应轴电机不转或转不动，可能伴异响",
+      "severity": "高",
+      "risk_note": "强行反复上电试机可能扩大硬件损坏，先断电排查",
+      "causes": [
+        "C_LOOSE_WIRING",
+        "C_CABLE_DAMAGE",
+        "C_PARAM_DRIFT",
+        "C_BEARING_SEIZED",
+        "C_MECH_COLLISION",
+        "C_DRIVER_FAIL"
+      ]
+    },
+    "F_LUB_PRESSURE": {
+      "name": "润滑系统压力异常",
+      "device": "VMC850",
+      "alarm_codes": [
+        "506",
+        "507"
+      ],
+      "phenomenon": "报润滑压力异常或润滑单元报警，导轨异响",
+      "severity": "中",
+      "risk_note": "长期缺润滑会磨损导轨丝杠，应尽快处理",
+      "causes": [
+        "C_LUB_EMPTY",
+        "C_LUB_PUMP",
+        "C_LUB_PIPE"
+      ]
+    },
+    "F_SPINDLE_OVERHEAT": {
+      "name": "主轴过热",
+      "device": "VMC850",
+      "alarm_codes": [
+        "751",
+        "752"
+      ],
+      "phenomenon": "主轴温度报警，外壳烫手，可能伴精度下降",
+      "severity": "中",
+      "risk_note": "过热持续运行会烧轴承，立即降速观察",
+      "causes": [
+        "C_COOLANT_FAIL",
+        "C_SPINDLE_BEARING"
+      ]
+    },
+    "F_SIZE_DRIFT": {
+      "name": "加工尺寸漂移",
+      "device": "VMC650",
+      "alarm_codes": [
+        "尺寸漂移",
+        "尺寸超差"
+      ],
+      "phenomenon": "加工尺寸逐渐漂移或超差，通常无报警提示",
+      "severity": "中",
+      "risk_note": "尺寸漂移期间产出的工件需全数复检，防止不良品流出",
+      "causes": [
+        "C_BACKLASH_PARAM",
+        "C_THERMAL_DRIFT",
+        "C_SCREW_PRELOAD"
+      ]
+    }
+  },
+  "causes": {
+    "C_LOOSE_WIRING": {
+      "name": "线路松动 / 接线端子氧化",
+      "prob": 0.4,
+      "cost": "低",
+      "risk": "低",
+      "check_steps": [
+        "断电并验电后，检查伺服电机动力线接线端子是否松动",
+        "观察端子是否氧化发黑，必要时打磨氧化层并重新紧固",
+        "重新上电，观察报警是否消除"
+      ],
+      "parts": []
+    },
+    "C_CABLE_DAMAGE": {
+      "name": "编码器 / 动力线缆破损",
+      "prob": 0.3,
+      "cost": "低",
+      "risk": "低",
+      "check_steps": [
+        "断电后沿电缆桥架目视检查伺服线缆全程，重点看拖链弯折处有无破皮、压伤",
+        "用手轻晃接头，感受是否有松动感，观察插头针脚有无歪斜烧蚀",
+        "外观正常时可用万用表测量线缆通断，确认内部是否断芯"
+      ],
+      "parts": [
+        "P_SERVO_CABLE"
+      ]
+    },
+    "C_PARAM_DRIFT": {
+      "name": "伺服驱动器参数漂移",
+      "prob": 0.25,
+      "cost": "低",
+      "risk": "中",
+      "check_steps": [
+        "对照随机参数表，检查伺服增益、电子齿轮比等关键参数是否被改动",
+        "修改参数前先备份当前参数",
+        "恢复标准参数后重新配置，试运行观察"
+      ],
+      "risk_note": "参数修改需专人操作，设置不当可能引起飞车",
+      "parts": []
+    },
+    "C_BEARING_SEIZED": {
+      "name": "电机轴承卡死 / 机械负载卡住",
+      "prob": 0.2,
+      "cost": "中",
+      "risk": "中",
+      "check_steps": [
+        "断电手动盘车，检查丝杠、导轨是否卡滞",
+        "检查润滑状态是否正常",
+        "脱开电机与丝杠联轴器，区分故障在电机侧还是机械侧"
+      ],
+      "parts": [
+        "P_SERVO_BEARING"
+      ]
+    },
+    "C_MECH_COLLISION": {
+      "name": "装夹碰撞 / 工件负载异常",
+      "prob": 0.08,
+      "cost": "中",
+      "risk": "中",
+      "check_steps": [
+        "询问操作工报警前是否发生过撞刀、工件未夹紧飞出等异常",
+        "断电手动盘工作台，检查丝杠导轨有无撞伤变形、切屑是否挤入",
+        "确认工艺装夹方式是否超出该轴额定负载"
+      ],
+      "parts": []
+    },
+    "C_DRIVER_FAIL": {
+      "name": "伺服驱动器硬件损坏",
+      "prob": 0.15,
+      "cost": "高",
+      "risk": "高",
+      "check_steps": [
+        "确认外围线路与负载正常后，用替换法测试驱动器",
+        "观察驱动器面板指示灯或数码管故障码并记录"
+      ],
+      "risk_note": "驱动器内部有大电容，带电拆解有触电风险，建议联系厂家工程师",
+      "parts": [
+        "P_SERVO_DRIVER"
+      ]
+    },
+    "C_LUB_EMPTY": {
+      "name": "润滑油不足 / 油品耗尽",
+      "prob": 0.55,
+      "cost": "低",
+      "risk": "低",
+      "check_steps": [
+        "观察润滑油箱液位，低于下限即补加指定型号导轨油",
+        "补油后手动执行润滑动作，观察压力回升"
+      ],
+      "parts": [
+        "P_LUB_OIL"
+      ]
+    },
+    "C_LUB_PUMP": {
+      "name": "润滑泵故障",
+      "prob": 0.3,
+      "cost": "中",
+      "risk": "中",
+      "check_steps": [
+        "手动启动润滑泵，听电机是否运转",
+        "泵运转但无压力输出时，检查泵体磨损与单向阀"
+      ],
+      "parts": [
+        "P_LUB_PUMP"
+      ]
+    },
+    "C_LUB_PIPE": {
+      "name": "油路堵塞 / 管路泄漏",
+      "prob": 0.15,
+      "cost": "低",
+      "risk": "低",
+      "check_steps": [
+        "沿油路检查各接头是否渗漏",
+        "拆检分配器与计量件是否堵塞，必要时清洗更换"
+      ],
+      "parts": []
+    },
+    "C_COOLANT_FAIL": {
+      "name": "主轴冷却不足",
+      "prob": 0.6,
+      "cost": "低",
+      "risk": "低",
+      "check_steps": [
+        "检查主轴冷却箱液位与水泵运行状态",
+        "清理冷却水箱滤网与换热器"
+      ],
+      "parts": []
+    },
+    "C_SPINDLE_BEARING": {
+      "name": "主轴轴承磨损",
+      "prob": 0.4,
+      "cost": "高",
+      "risk": "高",
+      "check_steps": [
+        "空运转各档转速，听轴承有无异响并用测振仪辅助判断",
+        "检查拉刀力与径向跳动是否超标"
+      ],
+      "risk_note": "主轴拆装需专用工装与恒温环境，建议返厂或联系厂家",
+      "parts": []
+    },
+    "C_BACKLASH_PARAM": {
+      "name": "反向间隙 / 螺距补偿参数异常",
+      "prob": 0.35,
+      "cost": "低",
+      "risk": "低",
+      "check_steps": [
+        "用百分表打表实测各轴反向间隙，与参数表设定值对比",
+        "间隙超标时重新测量并更新反向间隙与螺距补偿参数",
+        "修改参数前先备份当前参数，改后试切件复测"
+      ],
+      "parts": []
+    },
+    "C_THERMAL_DRIFT": {
+      "name": "热变形漂移",
+      "prob": 0.25,
+      "cost": "低",
+      "risk": "低",
+      "check_steps": [
+        "对比冷机与连续运行 2 小时后的首件尺寸，确认是否随温度漂移",
+        "检查切削液浓度与冷却系统是否正常，车间温差是否过大",
+        "按保养规范执行预热空运转后再首件检验"
+      ],
+      "parts": []
+    },
+    "C_SCREW_PRELOAD": {
+      "name": "丝杠预紧力异常 / 丝杠磨损",
+      "prob": 0.4,
+      "cost": "中",
+      "risk": "中",
+      "check_steps": [
+        "检查丝杠导轨润滑状态是否正常",
+        "打表测量定位重复性，多次往返观察读数离散度",
+        "确认预紧力异常后重新调整丝杠预紧并做螺距补偿"
+      ],
+      "parts": [
+        "P_SCREW_BEARING"
+      ]
+    }
+  },
+  "parts": {
+    "P_SERVO_DRIVER": {
+      "name": "伺服驱动器",
+      "model": "示例：SV660P-4T-0.7kW",
+      "note": "以设备铭牌与厂家选型为准"
+    },
+    "P_SERVO_BEARING": {
+      "name": "伺服电机轴承",
+      "model": "示例：6204-2RS",
+      "note": "以电机型号查厂家轴承手册为准"
+    },
+    "P_LUB_OIL": {
+      "name": "导轨润滑油",
+      "model": "示例：ISO VG68",
+      "note": "以保养手册指定油品为准"
+    },
+    "P_LUB_PUMP": {
+      "name": "润滑泵单元",
+      "model": "示例：电动稀油润滑泵 2L",
+      "note": "以润滑单元铭牌为准"
+    },
+    "P_SERVO_CABLE": {
+      "name": "伺服编码器线缆",
+      "model": "示例：6m 带拖链屏蔽电缆组件",
+      "note": "以电机编码器接口与原厂线缆长度为准"
+    },
+    "P_SCREW_BEARING": {
+      "name": "丝杠支撑轴承",
+      "model": "示例：7014C 角接触球轴承",
+      "note": "以丝杠型号查厂家轴承手册为准"
+    }
+  }
+}

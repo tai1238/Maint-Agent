@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maint-Agent · 设备维保智能体</title>
+<style>
+:root {
+  --bg: #0f1419; --panel: #1a2129; --panel2: #212b36; --border: #2e3a47;
+  --text: #e6edf3; --muted: #8b98a5; --brand: #2ea86c; --brand2: #35c07e;
+  --warn: #e5a53c; --danger: #e05d5d;
+  font-size: 14px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: "Microsoft YaHei", system-ui, sans-serif; height: 100vh; display: flex; flex-direction: column; }
+header { display: flex; align-items: center; gap: 12px; padding: 12px 20px; background: var(--panel); border-bottom: 1px solid var(--border); }
+header .logo { width: 34px; height: 34px; border-radius: 8px; background: linear-gradient(135deg, var(--brand), #1d7a4e); display: flex; align-items: center; justify-content: center; font-weight: bold; }
+header h1 { font-size: 16px; font-weight: 600; }
+header .sub { color: var(--muted); font-size: 12px; }
+header .status { margin-left: auto; font-size: 12px; color: var(--brand2); display: flex; align-items: center; gap: 6px; }
+header .status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--brand2); }
+header .reset-btn { margin-left: 14px; font-size: 12px; color: var(--muted); background: var(--panel2); border: 1px solid var(--border); border-radius: 999px; padding: 5px 14px; cursor: pointer; }
+header .reset-btn:hover { color: var(--brand2); border-color: var(--brand); }
+main { flex: 1; display: grid; grid-template-columns: 1.6fr 1fr; min-height: 0; }
+/* 左侧对话区 */
+.chat { display: flex; flex-direction: column; border-right: 1px solid var(--border); min-height: 0; }
+.messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.msg { max-width: 82%; padding: 12px 14px; border-radius: 12px; line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
+.msg.user { align-self: flex-end; background: #24406b; border-bottom-right-radius: 4px; }
+.msg.bot { align-self: flex-start; background: var(--panel); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+.msg.bot b { color: var(--brand2); }
+.trace { align-self: flex-start; display: flex; flex-wrap: wrap; gap: 6px; margin-top: -6px; }
+.trace span { font-size: 11px; color: var(--muted); background: var(--panel2); border: 1px solid var(--border); border-radius: 999px; padding: 2px 9px; }
+.msg.bot .bot-row { display: flex; align-items: flex-start; gap: 8px; }
+.msg.bot .bot-body { flex: 1; min-width: 0; }
+.tts-btn { flex: none; width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border); background: var(--panel2); color: var(--muted); cursor: pointer; font-size: 14px; }
+.tts-btn:hover { color: var(--brand2); border-color: var(--brand); }
+.approve-btn { font-size: 12px; color: #fff; background: var(--brand2); border: none; border-radius: 8px; padding: 7px 14px; cursor: pointer; }
+.approve-btn:hover { opacity: 0.9; }
+.typing { color: var(--muted); font-size: 12px; padding: 4px 14px; display: none; }
+.suggestions { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 20px 10px; }
+.suggestions button { font-size: 12px; color: var(--muted); background: var(--panel2); border: 1px solid var(--border); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+.suggestions button:hover { color: var(--brand2); border-color: var(--brand); }
+.inputbar { display: flex; gap: 10px; padding: 14px 20px 18px; }
+.inputbar textarea { flex: 1; resize: none; height: 52px; background: var(--panel2); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-size: 14px; font-family: inherit; outline: none; }
+.inputbar textarea:focus { border-color: var(--brand); }
+.inputbar button { width: 96px; background: var(--brand); color: #fff; border: none; border-radius: 10px; font-size: 15px; cursor: pointer; }
+.inputbar button:disabled { opacity: 0.5; cursor: default; }
+.inputbar .mic { width: 52px; font-size: 20px; background: var(--panel2); border: 1px solid var(--border); color: var(--muted); }
+.inputbar .mic.listening { color: #fff; background: var(--danger); border-color: var(--danger); animation: pulse 1.2s infinite; }
+@keyframes pulse { 50% { opacity: 0.75; } }
+/* 右侧数据面板 */
+.panel { display: flex; flex-direction: column; min-height: 0; }
+.tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--panel); }
+.tabs button { flex: 1; padding: 12px 0; background: none; border: none; color: var(--muted); font-size: 13px; cursor: pointer; border-bottom: 2px solid transparent; }
+.tabs button.active { color: var(--brand2); border-bottom-color: var(--brand2); }
+.tabbody { flex: 1; overflow-y: auto; padding: 16px; display: none; }
+.tabbody.active { display: block; }
+.fault-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; }
+.fault-card h3 { font-size: 14px; color: var(--brand2); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tag { font-size: 11px; background: var(--panel2); color: var(--muted); border-radius: 999px; padding: 1px 8px; }
+.cause { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted); padding: 4px 0 0 14px; }
+.cause .num { width: 18px; height: 18px; border-radius: 50%; background: var(--panel2); color: var(--text); font-size: 11px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.row-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; font-size: 13px; }
+.row-card .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 6px; }
+.row-card .head b { font-size: 13.5px; }
+.pill { font-size: 11px; border-radius: 999px; padding: 2px 9px; }
+.pill.ok { background: #123527; color: #4cd695; }
+.pill.zero { background: #3a2323; color: #f08c8c; }
+.pill.mid { background: #3a2f1c; color: #eec06a; }
+.kv { color: var(--muted); font-size: 12.5px; line-height: 1.8; }
+.empty { color: var(--muted); font-size: 13px; text-align: center; padding: 30px 0; }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">维</div>
+  <div><h1>Maint-Agent</h1><div class="sub">面向中小型机加工场景的设备维保智能体</div></div>
+  <div class="status">服务运行中</div>
+  <button class="reset-btn" onclick="resetChat()">重置会话</button>
+</header>
+<main>
+  <section class="chat">
+    <div class="messages" id="messages"></div>
+    <div class="typing" id="typing">智能体正在排查中，可能需要十几秒…</div>
+    <div class="suggestions">
+      <button onclick="quick(this)">这台VMC850开机就报伺服过载，X03，主轴转不动，昨天还正常</button>
+      <button onclick="quick(this)">报了506润滑压力异常怎么回事</button>
+      <button onclick="quick(this)">VMC650加工的件尺寸老是不稳定，怎么办</button>
+      <button onclick="quick(this)">修好了，是接线松了，花了大概50分钟</button>
+      <button onclick="quick(this)">本月设备最高发的故障是什么，停机多久</button>
+    </div>
+    <div class="inputbar">
+      <textarea id="input" placeholder="描述设备故障，例如：VMC850 报 X03 伺服过载…（Ctrl+Enter 发送）"></textarea>
+      <button id="mic" class="mic" title="语音报修" onclick="toggleMic()">🎤</button>
+      <button id="send" onclick="send()">发送</button>
+    </div>
+  </section>
+  <aside class="panel">
+    <div class="tabs">
+      <button class="active" onclick="switchTab(this,0)">故障树图谱</button>
+      <button onclick="switchTab(this,1)">维保工单</button>
+      <button onclick="switchTab(this,2)">备件 / 台账</button>
+      <button onclick="switchTab(this,3)">知识回流</button>
+    </div>
+    <div class="tabbody active" id="tab0"></div>
+    <div class="tabbody" id="tab1"></div>
+    <div class="tabbody" id="tab2"></div>
+    <div class="tabbody" id="tab3"></div>
+  </aside>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+let history = [];
+
+function switchTab(btn, idx) {
+  document.querySelectorAll(".tabs button").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".tabbody").forEach(t => t.classList.remove("active"));
+  btn.classList.add("active");
+  $("tab" + idx).classList.add("active");
+}
+
+function addMsg(role, text) {
+  const div = document.createElement("div");
+  div.className = "msg " + (role === "user" ? "user" : "bot");
+  if (role === "user") {
+    div.innerHTML = escapeHtml(text);
+  } else {
+    const row = document.createElement("div");
+    row.className = "bot-row";
+    const body = document.createElement("div");
+    body.className = "bot-body";
+    body.innerHTML = mdLite(text);
+    const speak = document.createElement("button");
+    speak.className = "tts-btn";
+    speak.title = "朗读排查指引";
+    speak.textContent = "🔊";
+    speak.onclick = () => toggleSpeak(text, speak);
+    row.appendChild(body);
+    row.appendChild(speak);
+    div.appendChild(row);
+  }
+  $("messages").appendChild(div);
+  $("messages").scrollTop = $("messages").scrollHeight;
+}
+
+function toggleSpeak(text, btn) {
+  if (speechSynthesis.speaking) { speechSynthesis.cancel(); return; }
+  const u = new SpeechSynthesisUtterance(text.replace(/\*\*/g, ""));
+  u.lang = "zh-CN";
+  u.rate = 1.05;
+  speechSynthesis.speak(u);
+}
+
+function escapeHtml(s) { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+function mdLite(s) {
+  return escapeHtml(s)
+    .replace(/\*\*(.+?)\*\*/g, "<b>$1</b>")
+    .replace(/（(\d+\. .*?)）/g, "（$1）");
+}
+
+function addTrace(names) {
+  if (!names || !names.length) return;
+  const div = document.createElement("div");
+  div.className = "trace";
+  div.innerHTML = names.map(n => "<span>⚙ " + escapeHtml(n) + "</span>").join("");
+  $("messages").appendChild(div);
+  $("messages").scrollTop = $("messages").scrollHeight;
+}
+
+async function send() {
+  const input = $("input");
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = "";
+  addMsg("user", text);
+  $("send").disabled = true;
+  $("typing").style.display = "block";
+  try {
+    const resp = await fetch("/api/chat", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text })
+    });
+    const data = await resp.json();
+    $("typing").style.display = "none";
+    if (data.error) { addMsg("bot", "⚠ " + data.error); }
+    else { addMsg("bot", data.reply); addTrace(data.trace); refreshPanel(); }
+  } catch (e) {
+    $("typing").style.display = "none";
+    addMsg("bot", "⚠ 网络异常：" + e.message);
+  }
+  $("send").disabled = false;
+  input.focus();
+}
+
+function quick(btn) { $("input").value = btn.textContent; send(); }
+document.addEventListener("keydown", e => {
+  if (e.ctrlKey && e.key === "Enter") send();
+});
+
+async function resetChat() {
+  if (!confirm("清空当前对话历史，恢复初始状态？")) return;
+  try { await fetch("/api/reset", { method: "POST" }); } catch (e) {}
+  $("messages").innerHTML = "";
+  addMsg("bot", "会话已重置。你可以重新报修，例如：这台 VMC850 开机报伺服过载 X03");
+}
+
+// ---------- 语音报修（浏览器语音识别，Edge/Chrome 原生支持） ----------
+let recog = null, listening = false;
+(function initMic() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { $("mic").style.display = "none"; return; }
+  recog = new SR();
+  recog.lang = "zh-CN";
+  recog.interimResults = true;
+  recog.continuous = false;
+  recog.onresult = (e) => {
+    let text = "";
+    for (const r of e.results) text += r[0].transcript;
+    $("input").value = text;
+  };
+  recog.onend = () => { listening = false; $("mic").classList.remove("listening"); };
+  recog.onerror = () => { listening = false; $("mic").classList.remove("listening"); };
+})();
+
+function toggleMic() {
+  if (!recog) return;
+  if (listening) { recog.stop(); return; }
+  listening = true;
+  $("mic").classList.add("listening");
+  $("input").placeholder = "正在听…请说出故障描述（如：VMC850 开机报伺服过载 X03）";
+  try { recog.start(); } catch (e) {}
+}
+
+// ---------- 右侧面板 ----------
+async function refreshPanel() {
+  try {
+    const [kg, orders, parts, repairs, pending] = await Promise.all([
+      fetch("/api/kg").then(r => r.json()),
+      fetch("/api/workorders").then(r => r.json()),
+      fetch("/api/parts").then(r => r.json()),
+      fetch("/api/repairs").then(r => r.json()),
+      fetch("/api/pending").then(r => r.json()),
+    ]);
+    renderKG(kg); renderOrders(orders); renderParts(parts); renderRepairs(repairs); renderPending(pending);
+  } catch (e) { /* 面板刷新失败不影响对话 */ }
+}
+
+function renderKG(kg) {
+  const el = $("tab0");
+  el.innerHTML = "";
+  const intro = document.createElement("div");
+  intro.className = "kv";
+  intro.style.marginBottom = "10px";
+  intro.textContent = `覆盖设备：${(kg.meta.devices || []).join(" / ")}（图谱 v${kg.meta.version}）——报警码出现时，按“由简到繁”给出排查链`;
+  el.appendChild(intro);
+  for (const [fid, f] of Object.entries(kg.faults)) {
+    const card = document.createElement("div");
+    card.className = "fault-card";
+    const causes = f.causes
+      .map((cid, i) => {
+        const c = kg.causes[cid];
+        return `<div class="cause"><span class="num">${i + 1}</span>${c.name}｜成本${c.cost}｜先验${c.prob}</div>`;
+      }).join("");
+    card.innerHTML = `<h3>${f.name}<span class="tag">${f.device}</span><span class="tag">报警码 ${f.alarm_codes.join("/")}</span><span class="tag">严重度 ${f.severity}</span></h3>${causes}`;
+    el.appendChild(card);
+  }
+}
+
+function renderOrders(orders) {
+  const el = $("tab1");
+  if (!orders.length) { el.innerHTML = '<div class="empty">暂无工单，报修确认后会自动生成</div>'; return; }
+  el.innerHTML = orders.map(o => `
+    <div class="row-card">
+      <div class="head"><b>${o["工单号"]}</b><span class="pill mid">${o["优先级"]}优先 · ${o["状态"]}</span></div>
+      <div class="kv">设备：${o["设备"]}｜创建：${o["创建时间"]}<br>故障：${o["故障描述"]}<br>初判：${o["初步判断原因"]}</div>
+    </div>`).join("");
+}
+
+function renderParts(parts) {
+  const el = $("tab2");
+  el.innerHTML = "<h3 style='font-size:13px;color:var(--muted);margin-bottom:10px'>备件库存</h3>" + parts.map(p => {
+    const pill = p.stock > 0 ? `<span class="pill ok">库存 ${p.stock}</span>` : `<span class="pill zero">缺货</span>`;
+    return `<div class="row-card"><div class="head"><b>${p.name}</b>${pill}</div>
+      <div class="kv">${p.model}｜${p.location}<br>${p.price_note}</div></div>`;
+  }).join("");
+}
+
+function renderRepairs(repairs) {
+  const el = $("tab2");
+  el.innerHTML += "<h3 style='font-size:13px;color:var(--muted);margin:16px 0 10px'>维修台账（最新在前）</h3>" +
+    (repairs.length ? repairs.map(r => `
+    <div class="row-card"><div class="head"><b>${r.id}</b><span class="tag">${r.date}</span></div>
+      <div class="kv">${r.device}｜${r.fault}<br>根因：${r.root_cause}<br>处置：${r.action}｜停机 ${r.downtime_minutes} 分钟</div>
+    </div>`).join("") : '<div class="empty">暂无记录</div>');
+}
+
+function renderPending(pending) {
+  const el = $("tab3");
+  const pend = pending.filter(p => p.status.includes("待人工审核"));
+  const merged = pending.filter(p => !p.status.includes("待人工审核"));
+  let html = `<div class="kv" style="margin-bottom:10px">每次维修确认后自动进入本队列，管理员审核通过即沉淀为图谱新知识——<b style="color:var(--brand2)">系统越用越懂本厂设备</b>。</div>`;
+  html += `<h3 style="font-size:13px;color:var(--warn);margin-bottom:10px">待人工审核（${pend.length}）</h3>`;
+  html += pend.length ? pend.map(p => `
+    <div class="row-card"><div class="head"><b>${p.record_id}</b><span class="pill mid">${p.status}</span></div>
+      <div class="kv">${p.device}｜${p.fault}<br>根因：${p.root_cause}<br>处置：${p.action}</div>
+      <div style="margin-top:8px"><button class="approve-btn" onclick="approveCase('${p.record_id}')">✓ 审核通过，并入故障树图谱</button></div></div>`).join("")
+    : '<div class="empty">队列为空，维修确认后自动进入</div>';
+  html += `<h3 style="font-size:13px;color:var(--brand2);margin:16px 0 10px">已并入图谱 / 已驳回（${merged.length}）</h3>`;
+  html += merged.length ? merged.map(p => `
+    <div class="row-card"><div class="head"><b>${p.record_id}</b><span class="pill ok">${p.status.includes("驳回") ? "已驳回" : "已并入图谱"}</span></div>
+      <div class="kv">${p.device}｜${p.fault}<br>根因：${p.root_cause}</div></div>`).join("")
+    : '<div class="empty">暂无已归档案例</div>';
+  el.innerHTML = html;
+}
+
+function approveCase(rid) {
+  if (!confirm(`确认将案例 ${rid} 的根因并入故障树图谱？`)) return;
+  fetch("/api/review/approve", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ record_id: rid }),
+  }).then(r => r.json()).then(d => {
+    alert(d.message || d.error || "操作完成");
+    refreshPanel();
+  }).catch(() => alert("请求失败，请检查服务"));
+}
+
+refreshPanel();
+</script>
+</body>
+</html>

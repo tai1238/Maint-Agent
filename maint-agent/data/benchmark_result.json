@@ -1,0 +1,76 @@
+{
+  "generated_at": "2026-11-04 15:32",
+  "corpus": {
+    "files": {
+      "manual_alarm_codes.txt": {
+        "chars": 504,
+        "lines": 19
+      },
+      "repair_history.txt": {
+        "chars": 573,
+        "lines": 29
+      },
+      "vmc850_maintenance.txt": {
+        "chars": 345,
+        "lines": 19
+      }
+    },
+    "repair_records": 4,
+    "total_chars": 1422
+  },
+  "manual_baseline": {
+    "steps": [
+      {
+        "动作": "在报警手册中定位 431/X03 条目",
+        "需读": "通读手册全文 504 字"
+      },
+      {
+        "动作": "发现手册只给方向，无本厂诱因链与备件对应",
+        "需读": "转下一份文档"
+      },
+      {
+        "动作": "在保养规范中找相关点检项",
+        "需读": "通读保养规范 345 字"
+      },
+      {
+        "动作": "在维修台账中逐条找同类案例（共 4 条）",
+        "需读": "通读台账 573 字"
+      }
+    ],
+    "lookup_actions": 4,
+    "docs_touched": 3,
+    "read_chars": 1422,
+    "est_minutes": 5.7,
+    "est_note": "人工耗时为估算：阅读量/300字每分钟 + 每份文档约20秒定位",
+    "输出": "无结构化排查链、无备件库存信息、无工单/台账沉淀"
+  },
+  "agent_measured": {
+    "rounds": [
+      {
+        "label": "报修",
+        "seconds": 5.3,
+        "tool_calls": 3,
+        "trace": [
+          "match_fault({'text': 'VMC850 开机报伺服过载 X03 主轴转不动'})",
+          "search_docs({'query': 'VMC850 伺服过载 X03 主轴转不动'})",
+          "get_causes({'fault_id': 'F_SERVO_OVERLOAD'})"
+        ],
+        "reply_chars": 433,
+        "reply_head": "已匹配到故障：**VMC850 伺服电机过载（报警码 X03 / 431 / 432）**，严重度：高。\n\n⚠️ 先说一句要紧的：**别反复上电试机**，容易把小毛病拖成大损坏。下面按\"由简到繁\"的顺序来，一次只做一步，做完告诉我结果，我再"
+      },
+      {
+        "label": "反馈修复",
+        "seconds": 4.6,
+        "tool_calls": 1,
+        "trace": [
+          "log_repair({'device': 'VMC850', 'fault_desc': '开机报伺服过载报警 X03，X 轴不动作，主轴转不动', 'root_cause': 'X 轴伺服动力线接线端子松动（伴氧化），导致接触不良、伺服过载报警', 'action_taken': '断电验电后检查电柜侧 X 轴伺服动力线接线端子，打磨氧化层并重新紧固，上电试运行报警消除', 'downtime_minutes': 50})"
+        ],
+        "reply_chars": 399,
+        "reply_head": "已入库，记录号 **R-20261104-008**，同时进了知识图谱待审核队列，管理员确认后就能沉淀成标准案例。\n\n**给您的两点提醒：**\n\n1. **端子松动容易复发**。电柜里的动力线端子受振动和温度循环影响，时间长了会再松。建议在"
+      }
+    ],
+    "kg_causes": 6,
+    "kg_check_steps": 17
+  },
+  "note": "人工耗时为阅读速度折算估算（方法已标注）；Agent 耗时为真实 API 计时。其余数字均为可复现统计。"
+}

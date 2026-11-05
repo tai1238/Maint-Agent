@@ -1,0 +1,12 @@
+{
+  "备注": "备件库存为演示用仿真数据",
+  "parts": [
+    {"id": "SP-001", "name": "伺服驱动器", "model": "SV660P-4T-0.7kW", "stock": 1, "location": "备件柜A-1", "price_note": "约3500元，以最新报价为准"},
+    {"id": "SP-002", "name": "伺服电机轴承", "model": "6204-2RS", "stock": 4, "location": "备件柜A-2", "price_note": "约35元/个"},
+    {"id": "SP-003", "name": "导轨润滑油", "model": "ISO VG68 18L", "stock": 2, "location": "油品区B-1", "price_note": "约260元/桶"},
+    {"id": "SP-004", "name": "润滑泵单元", "model": "电动稀油润滑泵2L", "stock": 0, "location": "需采购", "price_note": "约800元，已提交采购申请"},
+    {"id": "SP-005", "name": "电柜滤网", "model": "通用型 300x300", "stock": 6, "location": "备件柜B-3", "price_note": "约15元/片"},
+    {"id": "SP-006", "name": "伺服编码器线缆", "model": "6m 带拖链屏蔽电缆组件", "stock": 2, "location": "备件柜A-3", "price_note": "约180元/根"},
+    {"id": "SP-007", "name": "丝杠支撑轴承", "model": "7014C 角接触球轴承", "stock": 3, "location": "备件柜A-4", "price_note": "约95元/个"}
+  ]
+}
